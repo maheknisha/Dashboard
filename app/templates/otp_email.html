@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>OTP Verification</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+
+  <body
+    style="
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #f4f7ff;
+    "
+  >
+    <div
+      style="
+        max-width: 680px;
+        margin: auto;
+        padding: 45px 30px;
+        background: #ffffff;
+        border-radius: 30px;
+        text-align: center;
+      "
+    >
+      <h1 style="color: #1f1f1f;">Your OTP</h1>
+
+      <p style="font-size: 16px;">Hey <b>{{ name }}</b>,</p>
+
+      <p style="font-size: 14px; color: #434343;">
+        Use the following OTP to complete your verification.
+        This OTP is valid for <b>5 minutes</b>.
+      </p>
+
+      <p
+        style="
+          font-size: 40px;
+          font-weight: 600;
+          letter-spacing: 12px;
+          color: #ba3d4f;
+          margin-top: 40px;
+        "
+      >
+        {{ otp }}
+      </p>
+
+      <p style="margin-top: 40px; color: #8c8c8c;">
+        Do not share this OTP with anyone.
+      </p>
+
+      <hr style="margin-top: 40px;" />
+
+      <p style="font-size: 12px; color: #999;">
+        © 2026 Company. All rights reserved.
+      </p>
+    </div>
+  </body>
+</html>
