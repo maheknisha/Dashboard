@@ -99,10 +99,6 @@ def send_message(current_user, chat_id):
         "message": "Message sent successfully",
         "data": message_data
     }), 201
-
-# -------------------------------------------------
-# GET CHAT MESSAGES
-# -------------------------------------------------
 @chat_bp.route("/<int:chat_id>/messages", methods=["GET"])
 @token_required
 def get_messages(current_user, chat_id):
@@ -114,6 +110,15 @@ def get_messages(current_user, chat_id):
             "message": "Access denied",
             "data": None
         }), 403
+
+    # 🔥 MARK AS READ HERE
+    Message.query.filter(
+        Message.chat_id == chat.id,
+        Message.receiver_id == current_user.id,
+        Message.is_read.is_(False)
+    ).update({"is_read": True}, synchronize_session=False)
+
+    db.session.commit()
 
     messages = [{
         "id": m.id,
@@ -128,7 +133,6 @@ def get_messages(current_user, chat_id):
         "message": "Messages fetched successfully",
         "data": messages
     }), 200
-
 
 # -------------------------------------------------
 # LIST USER CHATS
@@ -208,4 +212,20 @@ def all_unread_counts(current_user):
         "status": "success",
         "message": "Unread counts fetched successfully",
         "data": result
+    }), 200
+@chat_bp.route("/profile", methods=["GET"])
+@token_required
+def get_profile(current_user):
+    return jsonify({
+        "status": "success",
+        "message": "Profile fetched successfully",  # ✅ added message
+        "data": {
+            "id": current_user.id,
+            "name": current_user.name,
+            "email": current_user.email,
+            "phone": current_user.phone,
+            "address": current_user.address,
+            "is_verified": current_user.is_verified,
+            
+        }
     }), 200
