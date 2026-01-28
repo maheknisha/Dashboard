@@ -95,47 +95,31 @@ def send_message(current_user, chat_id):
         "message": "Message sent successfully",
         "data": message_data
     }), 201
-
-# -------------------------------------------------
-# FETCH MESSAGES & MARK AS READ
-# -------------------------------------------------
 @chat_bp.route("/<int:chat_id>/messages", methods=["GET"])
 @token_required
 def get_messages(current_user, chat_id):
     chat = Chat.query.get_or_404(chat_id)
+
     if current_user.id not in [chat.user_id, chat.creator_id]:
         return jsonify({"status": "error", "message": "Access denied", "data": None}), 403
 
-    # Mark unread messages as read
-    messages_to_mark = Message.query.filter(
-        Message.chat_id == chat.id,
-        Message.receiver_id == current_user.id,
-        Message.is_read.is_(False)
-    ).all()
+    messages = Message.query.filter_by(chat_id=chat.id)\
+        .order_by(Message.created_at.asc())\
+        .all()
 
-    for m in messages_to_mark:
-        m.is_read = True
-        socketio.emit(
-            "message_read",
-            {"message_id": m.id, "chat_id": chat.id, "reader_id": current_user.id, "is_read": True},
-            room=f"user_{m.sender_id}"
-        )
-
-    db.session.commit()
-
-    messages = [{
+    data = [{
         "id": m.id,
         "sender_id": m.sender_id,
         "sender_name": m.sender.name,
         "content": m.content,
         "is_read": m.is_read,
         "created_at": str(m.created_at)
-    } for m in chat.messages]
+    } for m in messages]
 
     return jsonify({
         "status": "success",
         "message": "Messages fetched successfully",
-        "data": messages
+        "data": data
     }), 200
 
 # -------------------------------------------------
