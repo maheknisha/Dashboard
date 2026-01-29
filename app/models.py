@@ -31,10 +31,6 @@ class Strategy(db.Model):
 
     owner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     owner = db.relationship("User", backref="strategies")
-
-# -----------------------------
-# CHAT MODEL
-# -----------------------------
 class Chat(db.Model):
     __tablename__ = "chats"
 

@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 from app.extensions import db, socketio
-from app.models import Strategy
+from app.models import Strategy , Chat
 from app.utils.auth import token_required
 strategy_bp = Blueprint("strategy_bp", __name__, url_prefix="/strategy")
 @strategy_bp.route("/public", methods=["GET"])
@@ -235,21 +235,19 @@ def toggle_publish_strategy(current_user, strategy_id):
         }
     }), 200
 
-# -------------------------------------------------
-# DELETE STRATEGY
-# -------------------------------------------------
+
 @strategy_bp.route("/<int:strategy_id>", methods=["DELETE"])
 @token_required
 def delete_strategy(current_user, strategy_id):
     strategy = Strategy.query.get_or_404(strategy_id)
 
     if strategy.owner_id != current_user.id:
-        return jsonify({
-            "status": "error",
-            "message": "Permission denied",
-            "data": None
-        }), 403
+        return jsonify({"status": "error", "message": "Permission denied", "data": None}), 403
 
+    # Delete related chats first (optional if you want to remove them)
+    Chat.query.filter_by(strategy_id=strategy.id).delete()
+    
+    # Now delete the strategy
     db.session.delete(strategy)
     db.session.commit()
 

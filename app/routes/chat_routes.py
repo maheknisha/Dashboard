@@ -1,3 +1,5 @@
+
+
 from flask import Blueprint, request, jsonify
 from datetime import datetime
 from app.extensions import db, socketio
@@ -121,37 +123,36 @@ def get_messages(current_user, chat_id):
         "message": "Messages fetched successfully",
         "data": data
     }), 200
-
-# -------------------------------------------------
-# LIST CHATS
-# -------------------------------------------------
 @chat_bp.route("/list", methods=["GET"])
 @token_required
 def list_chats(current_user):
-    chats = Chat.query.filter(
-        (Chat.user_id == current_user.id) |
-        (Chat.creator_id == current_user.id)
-    ).order_by(Chat.updated_at.desc()).all()
+    try:
+        chats = Chat.query.filter(
+            (Chat.creator_id == current_user.id) | (Chat.user_id == current_user.id)
+        ).all()
 
-    data = []
-    for c in chats:
-        last_msg = c.messages[-1].content if c.messages else ""
-        data.append({
-            "chat_id": c.id,
-            "strategy_id": c.strategy_id,
-            "strategy_name": c.strategy.name,
-            "creator_id": c.creator_id,
-            "creator_name": c.creator.name,
-            "user_id": c.user_id,
-            "last_message": last_msg,
-            "updated_at": str(c.updated_at)
-        })
+        chat_list = []
 
-    return jsonify({
-        "status": "success",
-        "message": "Chats fetched successfully",
-        "data": data
-    }), 200
+        for c in chats:
+            last_msg = None
+            if c.messages:
+                last_msg = sorted(c.messages, key=lambda m: m.created_at, reverse=True)[0]
+
+            chat_list.append({
+                "id": c.id,
+                "strategy_id": c.strategy_id,
+                "strategy_name": c.strategy.name if c.strategy else "No strategy",
+                "creator_id": c.creator_id,
+                "user_id": c.user_id,
+                "last_message": last_msg.content if last_msg else "",
+                "updated_at": c.updated_at
+            })
+
+        return jsonify({"status": "success", "data": chat_list}), 200
+
+    except Exception as e:
+        return jsonify({"status": "error", "message": str(e)}), 500
+
 @chat_bp.route("/<int:chat_id>/read", methods=["PUT"])
 @token_required
 def mark_as_read(current_user, chat_id):
