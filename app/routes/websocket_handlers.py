@@ -64,6 +64,52 @@ def connect_socket(auth):  # accept the auth parameter
                 "user_name": user.name
             }
         })
+@socketio.on("mark_messages_as_read")
+def mark_messages_as_read(data):
+    chat_id = data.get("chat_id")
+    sender_id = data.get("sender_id")
+    receiver_id = data.get("receiver_id")
+
+    reader_id = session.get("user_id")
+
+    # 🔐 Step 1: validate user
+    if not reader_id or reader_id != receiver_id:
+        return
+
+    # 🔐 Step 2: validate chat
+    chat = Chat.query.get(chat_id)
+    if not chat or reader_id not in [chat.user_id, chat.creator_id]:
+        return
+
+    # 🔥 Step 3: fetch unread messages
+    unread_messages = Message.query.filter(
+        Message.chat_id == chat_id,
+        Message.receiver_id == reader_id,
+        Message.is_read.is_(False)
+    ).all()
+
+    if not unread_messages:
+        return
+
+    # 🔥 Step 4: update DB
+    message_ids = []
+    for msg in unread_messages:
+        msg.is_read = True
+        message_ids.append(msg.id)
+
+    db.session.commit()
+
+    # 🔔 Step 5: notify sender
+    socketio.emit(
+        "messages_read",
+        {
+            "chat_id": chat_id,
+            "reader_id": reader_id,
+            "message_ids": message_ids
+        },
+        room=f"user_{sender_id}"
+    )
+
 # -----------------------------
 # SOCKET DISCONNECT
 # -----------------------------
