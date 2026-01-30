@@ -39,8 +39,8 @@ def connect_socket(auth):  # accept the auth parameter
             "user_id": user.id,
             "user_name": user.name
         }
-    })
-
+    }, room=f"user_{user.id}")
+    
     # Automatically join chat if chat_id and role provided
     if chat_id and role:
         chat = Chat.query.get(chat_id)
